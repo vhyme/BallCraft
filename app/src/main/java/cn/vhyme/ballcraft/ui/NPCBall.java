@@ -1,6 +1,7 @@
 package cn.vhyme.ballcraft.ui;
 
 import android.content.Context;
+
 import java.util.List;
 import java.util.Vector;
 
@@ -21,7 +22,7 @@ public class NPCBall extends PlayerBall {
         delayFactor = (float) Math.random() / 2;
     }
 
-    public void updateBallList(Vector<Ball> balls){
+    public void updateBallList(Vector<Ball> balls) {
         this.balls = new Vector<>(balls);
     }
 
@@ -36,13 +37,13 @@ public class NPCBall extends PlayerBall {
                 // 发现大小相同的球，对不同的球随机选择“不做处理”或“当作敌人”
                 if (radius / ball.radius > 1 / (1 + GameView.IGNORED_DIFF_RATIO)
                         && radius / ball.radius < (1 + GameView.IGNORED_DIFF_RATIO)) {
-                    if(ball.radius > radius && ball.hashCode() % 2 == 0) continue;
+                    if (ball.radius > radius && ball.hashCode() % 2 == 0) continue;
                 }
 
                 if (ball.radius < radius) {
                     // 发现食物，产生引力
                     float distanceSquare = (ball.x - x) * (ball.x - x) + (ball.y - y) * (ball.y - y);
-                    if(distanceSquare == 0) continue;
+                    if (distanceSquare == 0) continue;
                     float module = ball.radius * ball.radius / distanceSquare;
                     float x1 = (ball.x - x);
                     float y1 = (ball.y - y);
@@ -53,7 +54,7 @@ public class NPCBall extends PlayerBall {
                 } else {
                     // 发现敌人，产生斥力
                     float distanceSquare = (ball.x - x) * (ball.x - x) + (ball.y - y) * (ball.y - y);
-                    if(distanceSquare == 0) continue;
+                    if (distanceSquare == 0) continue;
                     float module = ball.radius * ball.radius / distanceSquare;
                     float x1 = (ball.x - x);
                     float y1 = (ball.y - y);
@@ -65,7 +66,7 @@ public class NPCBall extends PlayerBall {
             }
 
             // 若被追杀，产生对墙的斥力
-            if(totalModule < 0) {
+            if (totalModule < 0) {
                 if (x > 0) {
                     float module = WALL_FORCE / (x * x);
                     vx += module * x;

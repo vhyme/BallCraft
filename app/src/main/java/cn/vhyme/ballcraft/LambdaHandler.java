@@ -13,10 +13,10 @@ public class LambdaHandler extends Handler {
 
     @Override
     public void handleMessage(Message msg) {
-        if(mRunnable != null) mRunnable.run();
+        if (mRunnable != null) mRunnable.run();
     }
 
-    public void run(){
+    public void run() {
         sendMessage(new Message());
     }
 }

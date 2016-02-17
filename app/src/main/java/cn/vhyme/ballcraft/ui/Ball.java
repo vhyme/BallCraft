@@ -20,15 +20,15 @@ public class Ball {
             R.color.o, R.color.p, R.color.q, R.color.r, R.color.s, R.color.t
     };
 
-    public Ball(Context context, float x, float y, float radius){
+    public Ball(Context context, float x, float y, float radius) {
         this.x = x;
         this.y = y;
         this.radius = radius;
-        this.color = ContextCompat.getColor(context, COLOR[(int)(Math.random()*COLOR.length - 1)]);
+        this.color = ContextCompat.getColor(context, COLOR[(int) (Math.random() * COLOR.length - 1)]);
     }
 
-    public void draw(CanvasCamera camera){
-        if(eaten){
+    public void draw(CanvasCamera camera) {
+        if (eaten) {
             radius -= GameView.BASE_SPEED_FACTOR;
         }
         Paint paint = new Paint();
