@@ -25,7 +25,7 @@ public class CanvasCamera {
     public static final int EXPECTED_CAMERA_WIDTH = 320,
                             EXPECTED_CAMERA_HEIGHT = 480;
 
-    private float scaleFactor = 1, zoomFactor;
+    public float scaleFactor = 1, zoomFactor;
 
     public CanvasCamera(Context context, int fullWidth, int fullHeight){
         this.context = context;

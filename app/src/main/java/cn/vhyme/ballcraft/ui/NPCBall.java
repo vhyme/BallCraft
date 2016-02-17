@@ -18,7 +18,7 @@ public class NPCBall extends PlayerBall {
 
     public NPCBall(Context context, float x, float y, float radius) {
         super(context, x, y, radius);
-        delayFactor = (float) Math.random() * 0.5f + 0.5f;
+        delayFactor = (float) Math.random() / 2;
     }
 
     public void updateBallList(Vector<Ball> balls){
@@ -33,19 +33,17 @@ public class NPCBall extends PlayerBall {
             // 使用模拟力学的方案
             float vx = 0, vy = 0, totalModule = 0;
             for (Ball ball : balls) {
-                // 发现大小相同的球，不做处理
+                // 发现大小相同的球，对不同的球随机选择“不做处理”或“当作敌人”
                 if (radius / ball.radius > 1 / (1 + GameView.IGNORED_DIFF_RATIO)
-                        && radius / ball.radius < (1 + GameView.IGNORED_DIFF_RATIO)) continue;
+                        && radius / ball.radius < (1 + GameView.IGNORED_DIFF_RATIO)) {
+                    if(ball.radius > radius && ball.hashCode() % 2 == 0) continue;
+                }
 
                 if (ball.radius < radius) {
                     // 发现食物，产生引力
                     float distanceSquare = (ball.x - x) * (ball.x - x) + (ball.y - y) * (ball.y - y);
                     if(distanceSquare == 0) continue;
                     float module = ball.radius * ball.radius / distanceSquare;
-
-                    // 部分NPC会很迟钝，取决于随机生成的迟钝系数
-                    module *= delayFactor;
-
                     float x1 = (ball.x - x);
                     float y1 = (ball.y - y);
                     float module2 = (float) Math.sqrt(x1 * x1 + y1 * y1);
@@ -57,10 +55,6 @@ public class NPCBall extends PlayerBall {
                     float distanceSquare = (ball.x - x) * (ball.x - x) + (ball.y - y) * (ball.y - y);
                     if(distanceSquare == 0) continue;
                     float module = ball.radius * ball.radius / distanceSquare;
-
-                    // 部分NPC会很迟钝，取决于随机生成的迟钝系数
-                    module *= delayFactor;
-
                     float x1 = (ball.x - x);
                     float y1 = (ball.y - y);
                     float module2 = (float) Math.sqrt(x1 * x1 + y1 * y1);
@@ -90,6 +84,9 @@ public class NPCBall extends PlayerBall {
                 }
             }
 
+            // 部分NPC会很迟钝，取决于随机生成的迟钝系数
+            vx *= delayFactor;
+            vy *= delayFactor;
             speedX += vx;
             speedY += vy;
             float module = (float) Math.sqrt(speedX * speedX + speedY * speedY);

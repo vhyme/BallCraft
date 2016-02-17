@@ -8,6 +8,8 @@ public class PlayerBall extends Ball {
 
     public float speedX = 0, speedY = 0, preparedRadius;
 
+    public long lastSplit = 0;
+
     public boolean prepared = false;
 
     public PlayerBall(Context context, float x, float y, float radius) {
@@ -22,13 +24,22 @@ public class PlayerBall extends Ball {
     }
 
     public void move(int worldW, int worldH) {
-        // 新球产生的动画
+        // 新球产生或大小变化的动画
         if (!prepared) {
-            if (radius >= preparedRadius - GameView.BASE_SPEED_FACTOR) {
-                radius = preparedRadius;
-                prepared = true;
+            if (preparedRadius > radius) {
+                if (radius >= preparedRadius - GameView.BASE_SPEED_FACTOR) {
+                    radius = preparedRadius;
+                    prepared = true;
+                } else {
+                    radius += GameView.BASE_SPEED_FACTOR;
+                }
             } else {
-                radius += GameView.BASE_SPEED_FACTOR;
+                if (radius <= preparedRadius + GameView.BASE_SPEED_FACTOR) {
+                    radius = preparedRadius;
+                    prepared = true;
+                } else {
+                    radius -= GameView.BASE_SPEED_FACTOR;
+                }
             }
         }
         if (radius < GameView.SUGAR_SIZE) radius = 0;
@@ -55,36 +66,38 @@ public class PlayerBall extends Ball {
         }
     }
 
-    // 返回值 是否吃光了一个NPC
-    public boolean transact(Ball ball) {
-        float d = radius + ball.radius;
+    // 返回值 是否吃掉了一个NPC
+    public boolean eat(Ball ball) {
+        if (!prepared || ball.eaten) return false;
+
+        float d = radius - ball.radius * .2f;
+
         if (Math.abs(x - ball.x) > d || Math.abs(y - ball.y) > d) return false;
+
         if (Math.sqrt((x - ball.x) * (x - ball.x) + (y - ball.y) * (y - ball.y)) > d) return false;
+
         if (ball instanceof PlayerBall && !((PlayerBall) ball).prepared) return false;
+
+        if (ball != this
+                && ball instanceof PlayerBall
+                && this.hashCode() < ball.hashCode() // 强调合并的主宾关系防止主宾混淆
+                && !(ball instanceof NPCBall) && !(this instanceof NPCBall)) {
+            // 都是自己的球，合并
+            prepared = false;
+            preparedRadius = (float) Math.sqrt(radius * radius + ball.radius * ball.radius);
+            ball.eaten = true;
+        }
+
         if (ball != this
                 && radius / ball.radius > 1 / (1 + GameView.IGNORED_DIFF_RATIO)
                 && radius / ball.radius < (1 + GameView.IGNORED_DIFF_RATIO)) {
-            float dx = x - ball.x;
-            float dy = y - ball.y;
-            float module = (float) Math.sqrt(dx * dx + dy * dy);
-            if (module != 0) {
-                x += dx / module * GameView.BASE_SPEED_FACTOR;
-                y += dy / module * GameView.BASE_SPEED_FACTOR;
-            }
+            return false;
         } else if (ball != this && radius > ball.radius) {
-            if (ball.radius <= GameView.SUGAR_SIZE) {
-                // 对方被吃光了
-                float r1 = ball.radius - GameView.SUGAR_SIZE;
-                radius = (float) Math.sqrt(radius * radius + ball.radius * ball.radius - r1 * r1);
-                ball.radius = r1;
-                if (ball.radius < GameView.SUGAR_SIZE) ball.radius = 0;
-                return ball instanceof NPCBall;
-            } else {
-                float r1 = ball.radius - GameView.BASE_SPEED_FACTOR;
-                radius = (float) Math.sqrt(radius * radius + ball.radius * ball.radius - r1 * r1);
-                ball.radius = r1;
-                if (ball.radius < GameView.BASE_SPEED_FACTOR) ball.radius = 0;
-            }
+            // 对方被吃掉了
+            prepared = false;
+            preparedRadius = (float) Math.sqrt(radius * radius + ball.radius * ball.radius);
+            ball.eaten = true;
+            return ball instanceof NPCBall;
         }
         return false;
     }
