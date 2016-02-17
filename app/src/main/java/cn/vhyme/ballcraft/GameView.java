@@ -117,8 +117,8 @@ public class GameView extends View {
     }
 
     private LambdaHandler refreshCanvas = new LambdaHandler(() -> {
-        invalidate();
         Collections.sort(balls, (ball1, ball2) -> new Float(ball1.radius).compareTo(ball2.radius));
+        invalidate();
 
         for (int i = 0; i < balls.size(); ) {
             Ball ball = balls.get(i);
