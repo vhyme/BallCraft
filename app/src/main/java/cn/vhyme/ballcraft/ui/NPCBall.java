@@ -4,6 +4,8 @@ import android.content.Context;
 import java.util.List;
 import java.util.Vector;
 
+import cn.vhyme.ballcraft.GameView;
+
 
 public class NPCBall extends PlayerBall {
 
@@ -11,8 +13,15 @@ public class NPCBall extends PlayerBall {
 
     public static final int WALL_FORCE = 60;
 
+    // 迟钝系数
+    private float delayFactor;
+
     public NPCBall(Context context, float x, float y, float radius) {
         super(context, x, y, radius);
+        delayFactor = 1;
+        if(Math.random() > 0.8) delayFactor -= 0.2f;
+        if(Math.random() > 0.8) delayFactor -= 0.2f;
+        if(Math.random() > 0.8) delayFactor -= 0.2f;
     }
 
     public void updateBallList(Vector<Ball> balls){
@@ -28,7 +37,8 @@ public class NPCBall extends PlayerBall {
             float vx = 0, vy = 0, totalModule = 0;
             for (Ball ball : balls) {
                 // 发现大小相同的球，不做处理
-                if (ball.radius == radius) continue;
+                if (radius / ball.radius > 1 / (1 + GameView.IGNORED_DIFF_RATIO)
+                        && radius / ball.radius < (1 + GameView.IGNORED_DIFF_RATIO)) continue;
 
                 if (ball.radius < radius) {
                     // 发现食物，产生引力
@@ -47,8 +57,9 @@ public class NPCBall extends PlayerBall {
                     if(distanceSquare == 0) continue;
                     float module = ball.radius * ball.radius / distanceSquare;
 
-                    // 为了提高难度，令NPC对NPC放松警惕
-                    if(ball instanceof NPCBall) module *= 0.7f;
+                    // 部分NPC会很迟钝，取决于随机生成的迟钝系数
+                    module *= delayFactor;
+
                     float x1 = (ball.x - x);
                     float y1 = (ball.y - y);
                     float module2 = (float) Math.sqrt(x1 * x1 + y1 * y1);
