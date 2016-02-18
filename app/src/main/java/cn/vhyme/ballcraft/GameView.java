@@ -133,8 +133,8 @@ public class GameView extends View {
         for (PlayerBall oldBall : myBalls) {
             if (myBalls.size() < MAX_SPLITS
                     && oldBall.radius >= DEFAULT_SIZE * (float) Math.sqrt(2)) {
+                float oldRadius = oldBall.prepared ? oldBall.radius : oldBall.preparedRadius;
                 oldBall.prepared = false;
-                float oldRadius = oldBall.radius;
                 float newRadius = oldRadius / (float) Math.sqrt(2);
                 oldBall.preparedRadius = newRadius;
                 oldBall.lastSplit = System.currentTimeMillis();

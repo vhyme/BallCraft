@@ -37,7 +37,7 @@ public class NPCBall extends PlayerBall {
                 // 发现大小相同的球，对不同的球随机选择“不做处理”或“当作敌人”
                 if (radius / ball.radius > 1 / (1 + GameView.IGNORED_DIFF_RATIO)
                         && radius / ball.radius < (1 + GameView.IGNORED_DIFF_RATIO)) {
-                    if (ball.radius > radius && ball.hashCode() % 2 == 0) continue;
+                    if (ball.radius < radius || ball.hashCode() % 2 == 0) continue;
                 }
 
                 if (ball.radius < radius) {
