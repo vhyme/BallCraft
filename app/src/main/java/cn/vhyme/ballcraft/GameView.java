@@ -161,6 +161,7 @@ public class GameView extends View {
                     dy *= module;
                 }
                 PlayerBall newBall = new PlayerBall(getContext(), this, oldBall.x, oldBall.y, oldRadius);
+                newBall.stopScale();
                 newBall.scaleTo(newRadius);
                 newBall.moveBy(dx, dy);
 

@@ -23,6 +23,11 @@ public class MotionBall extends Ball {
         scaledRadius = radius;
     }
 
+    public void stopScale(){
+        scaled = true;
+        radius = scaledRadius;
+    }
+
     public void moveBy(float dx, float dy) {
         moved = false;
         leftDX = targetDX = dx;
