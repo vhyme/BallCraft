@@ -260,6 +260,9 @@ public class GameView extends View {
             finalized = true;
             if (maxMass > sp.getInt("massRecord", 0)) {
                 editor.putInt("massRecord", maxMass);
+                editor.apply();
+            }
+            if (eatenCount > sp.getInt("eatenRecord", 0)) {
                 editor.putInt("eatenRecord", eatenCount);
                 editor.apply();
             }
