@@ -45,7 +45,7 @@ public class GameView extends View {
             SUGAR_COUNT = 100, NPC_COUNT = 20, VIRUS_COUNT = 20,
             MAX_SPLITS = 16, MERGE_DELAY_SECONDS = 10;
 
-    public static final float BASE_SPEED_FACTOR = 1.1f, MOTION_SPEED_FACTOR = 5f,
+    public static final float BASE_SPEED_FACTOR = 1.1f,
             IGNORED_DIFF_RATIO = .05f;
 
     private Paint textPaint;

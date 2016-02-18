@@ -18,5 +18,6 @@ public class MainActivity extends AppCompatActivity {
         split.setOnClickListener((v) -> game.split());
 
         game.feedButton = (FloatingActionButton) findViewById(R.id.feed);
+        findViewById(R.id.feed).setOnClickListener((v) -> game.feed());
     }
 }

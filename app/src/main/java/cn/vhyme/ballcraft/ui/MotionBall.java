@@ -73,10 +73,15 @@ public class MotionBall extends Ball {
             float dx = leftDX;
             float dy = leftDY;
             float module = (float) Math.sqrt(dx * dx + dy * dy);
-            float friction = (targetDX != 0 ? leftDX / targetDX : leftDY / targetDY) * .8f + .2f;
+            float friction = (targetDX != 0 ? leftDX / targetDX : leftDY / targetDY) * .5f + .1f;
             if (module > 0) {
-                additionalSpeedX = dx / module * GameView.MOTION_SPEED_FACTOR * friction;
-                additionalSpeedY = dy / module * GameView.MOTION_SPEED_FACTOR * friction;
+                additionalSpeedX = dx / module * GameView.BASE_SPEED_FACTOR * radius * friction;
+                additionalSpeedY = dy / module * GameView.BASE_SPEED_FACTOR * radius * friction;
+
+                if (!(this instanceof FeedBall)) {
+                    additionalSpeedX /= 2;
+                    additionalSpeedY /= 2;
+                }
                 leftDX -= additionalSpeedX;
                 leftDY -= additionalSpeedY;
             }
