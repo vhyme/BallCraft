@@ -10,7 +10,6 @@ import android.graphics.Paint;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -19,6 +18,8 @@ import java.util.Vector;
 
 import cn.vhyme.ballcraft.ui.Ball;
 import cn.vhyme.ballcraft.ui.CanvasCamera;
+import cn.vhyme.ballcraft.ui.FeedBall;
+import cn.vhyme.ballcraft.ui.MotionBall;
 import cn.vhyme.ballcraft.ui.NPCBall;
 import cn.vhyme.ballcraft.ui.PlayerBall;
 
@@ -36,11 +37,11 @@ public class GameView extends View {
 
     public static final int WORLD_WIDTH = 1000, WORLD_HEIGHT = 1000,
             GAME_MINUTES = 5, REFRESH_INTERVAL = 20,
-            DEFAULT_SIZE = 10, SUGAR_SIZE = 3,
+            DEFAULT_SIZE = 10, SUGAR_SIZE = 3, FEED_SIZE = 6, FEED_DISTANCE = 50,
             SUGAR_COUNT = 120, NPC_COUNT = 20,
             MAX_SPLITS = 16, MERGE_DELAY_SECONDS = 10;
 
-    public static final float BASE_SPEED_FACTOR = 1.3f,
+    public static final float BASE_SPEED_FACTOR = 1.3f, MOTION_SPEED_FACTOR = 3f,
             IGNORED_DIFF_RATIO = .05f;
 
     private Paint textPaint;
@@ -54,6 +55,8 @@ public class GameView extends View {
     private float[] zoom;
 
     private long surviveTime;
+
+    public long lastSplit = 0;
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -74,7 +77,7 @@ public class GameView extends View {
 
         balls = new Vector<>();
 
-        myBalls.add(new PlayerBall(getContext(),
+        myBalls.add(new PlayerBall(getContext(), this,
                 (int) (Math.random() * WORLD_WIDTH),
                 (int) (Math.random() * WORLD_HEIGHT), DEFAULT_SIZE));
         balls.add(myBalls.get(0));
@@ -83,7 +86,7 @@ public class GameView extends View {
             addSugar();
         }
         for (int i = 0; i < NPC_COUNT; i++) {
-            balls.add(new NPCBall(getContext(),
+            balls.add(new NPCBall(getContext(), this,
                     (int) (Math.random() * WORLD_WIDTH),
                     (int) (Math.random() * WORLD_HEIGHT), DEFAULT_SIZE));
         }
@@ -121,7 +124,7 @@ public class GameView extends View {
     private int getPlayerMass() {
         int mass = 0;
         for (PlayerBall ball : myBalls) {
-            float radius = ball.prepared ? ball.radius : ball.preparedRadius;
+            float radius = ball.scaled ? ball.radius : ball.scaledRadius;
             mass += radius * radius * Math.PI;
         }
         return mass;
@@ -133,32 +136,55 @@ public class GameView extends View {
         for (PlayerBall oldBall : myBalls) {
             if (myBalls.size() < MAX_SPLITS
                     && oldBall.radius >= DEFAULT_SIZE * (float) Math.sqrt(2)) {
-                float oldRadius = oldBall.prepared ? oldBall.radius : oldBall.preparedRadius;
-                oldBall.prepared = false;
+                float oldRadius = oldBall.scaled ? oldBall.radius : oldBall.scaledRadius;
                 float newRadius = oldRadius / (float) Math.sqrt(2);
-                oldBall.preparedRadius = newRadius;
-                oldBall.lastSplit = System.currentTimeMillis();
+                oldBall.scaleTo(newRadius);
                 float dx = oldBall.speedX;
                 float dy = oldBall.speedY;
                 float module = (float) Math.sqrt(dx * dx + dy * dy);
                 if (module > 0) {
                     dx /= module;
                     dy /= module;
-                    module = newRadius * 2;
+                    module = newRadius * 3;
                     dx *= module;
                     dy *= module;
                 }
-                PlayerBall newBall = new PlayerBall(getContext(),
-                        oldBall.x + dx, oldBall.y + dy, newRadius);
+                PlayerBall newBall = new PlayerBall(getContext(), this, oldBall.x, oldBall.y, oldRadius);
+                newBall.scaleTo(newRadius);
+                newBall.moveBy(dx, dy);
+
                 newBall.color = oldBall.color;
                 newBalls.add(newBall);
             }
         }
 
+        if (newBalls.size() > 0)
+            lastSplit = System.currentTimeMillis();
+
         for (PlayerBall newBall : newBalls) {
-            newBall.lastSplit = System.currentTimeMillis();
             myBalls.add(newBall);
             balls.add(newBall);
+        }
+    }
+
+    public void feed() {
+        float minSizeSq = DEFAULT_SIZE * DEFAULT_SIZE + FEED_SIZE * FEED_SIZE;
+        for (PlayerBall ball : myBalls) {
+            if (ball.radius * ball.radius >= minSizeSq) {
+                ball.scaleTo((float) Math.sqrt(ball.radius * ball.radius - FEED_SIZE * FEED_SIZE));
+                FeedBall ball1 = new FeedBall(getContext(), ball.x, ball.y, FEED_SIZE);
+                ball1.color = ball.color;
+                balls.add(ball1);
+                float dx = ball.speedX;
+                float dy = ball.speedY;
+                float module = (float) Math.sqrt(dx * dx + dy * dy);
+                if (module == 0) continue;
+                dx /= module;
+                dy /= module;
+                dx *= (ball.radius + FEED_DISTANCE);
+                dy *= (ball.radius + FEED_DISTANCE);
+                ball1.moveBy(dx, dy);
+            }
         }
     }
 
@@ -239,15 +265,15 @@ public class GameView extends View {
         for (int i = 0; i < balls.size(); ) {
             Ball ball = balls.get(i);
             if (ball instanceof PlayerBall) {
-                if (ball instanceof NPCBall) {
-                    ((NPCBall) ball).updateBallList(balls);
-                }
-                ((PlayerBall) ball).move(WORLD_WIDTH, WORLD_HEIGHT);
+                ((PlayerBall) ball).updateBallList(balls);
+            }
+            if (ball instanceof MotionBall) {
+                ((MotionBall) ball).move(WORLD_WIDTH, WORLD_HEIGHT);
             }
             for (Ball ball1 : balls) {
                 if (ball1 instanceof PlayerBall) {
-                    boolean enemyEatenUp = ((PlayerBall) ball1).eat(ball);
-                    if (!(ball1 instanceof NPCBall) && enemyEatenUp) {
+                    boolean enemyEaten = ((PlayerBall) ball1).eat(ball);
+                    if (!(ball1 instanceof NPCBall) && enemyEaten) {
                         eatenCount++;
                     }
                 }
@@ -256,39 +282,42 @@ public class GameView extends View {
             if (ball.radius <= 0) {
                 balls.remove(ball);
                 if (ball instanceof NPCBall) {
-                    balls.add(new NPCBall(getContext(), (int) (Math.random() * WORLD_WIDTH), (int) (Math.random() * WORLD_HEIGHT), DEFAULT_SIZE));
+                    balls.add(new NPCBall(getContext(), this,
+                            (int) (Math.random() * WORLD_WIDTH), (int) (Math.random() * WORLD_HEIGHT), DEFAULT_SIZE));
                 } else if (ball instanceof PlayerBall) {
-                    myBalls.remove(ball);
-                    if (myBalls.size() < 1) {
-                        if (maxMass > sp.getInt("massRecord", 0)) {
-                            editor.putInt("massRecord", maxMass);
-                            editor.apply();
+                    if (!(ball instanceof FeedBall)) {
+                        myBalls.remove(ball);
+                        if (myBalls.size() < 1) {
+                            if (maxMass > sp.getInt("massRecord", 0)) {
+                                editor.putInt("massRecord", maxMass);
+                                editor.apply();
+                            }
+                            if (eatenCount > sp.getInt("eatenRecord", 0)) {
+                                editor.putInt("eatenRecord", eatenCount);
+                                editor.apply();
+                            }
+                            new AlertDialog.Builder(getContext()).setMessage("你被吃掉了！\n" +
+                                    "最大体重：" + maxMass + "千克（纪录" + sp.getInt("massRecord", 0) + "千克）\n" +
+                                    "吞噬球数：" + eatenCount + "（纪录" + sp.getInt("eatenRecord", 0) + "）\n" +
+                                    "存活时间：" + ((surviveTime / 1000 / 60) == 0 ? "" : (surviveTime / 1000 / 60) + "分")
+                                    + (surviveTime / 1000 % 60) + "秒\n")
+                                    .setCancelable(true)
+                                    .setOnCancelListener((dlg) -> {
+                                        ((Activity) getContext()).finish();
+                                    })
+                                    .setPositiveButton("继续本局", (dlg, which) -> {
+                                        eatenCount = 0;
+                                        PlayerBall ball1 = new PlayerBall(getContext(), this,
+                                                (int) (Math.random() * WORLD_WIDTH),
+                                                (int) (Math.random() * WORLD_HEIGHT), DEFAULT_SIZE);
+                                        myBalls.add(ball1);
+                                        balls.add(ball1);
+                                    })
+                                    .setNegativeButton("重新开始", (dlg, which) -> {
+                                        ((Activity) getContext()).recreate();
+                                    })
+                                    .show();
                         }
-                        if (eatenCount > sp.getInt("eatenRecord", 0)) {
-                            editor.putInt("eatenRecord", eatenCount);
-                            editor.apply();
-                        }
-                        new AlertDialog.Builder(getContext()).setMessage("你被吃掉了！\n" +
-                                "最大体重：" + maxMass + "千克（纪录" + sp.getInt("massRecord", 0) + "千克）\n" +
-                                "吞噬球数：" + eatenCount + "（纪录" + sp.getInt("eatenRecord", 0) + "）\n" +
-                                "存活时间：" + ((surviveTime / 1000 / 60) == 0 ? "" : (surviveTime / 1000 / 60) + "分")
-                                + (surviveTime / 1000 % 60) + "秒\n")
-                                .setCancelable(true)
-                                .setOnCancelListener((dlg) -> {
-                                    ((Activity) getContext()).finish();
-                                })
-                                .setPositiveButton("继续本局", (dlg, which) -> {
-                                    eatenCount = 0;
-                                    PlayerBall ball1 = new PlayerBall(getContext(),
-                                            (int) (Math.random() * WORLD_WIDTH),
-                                            (int) (Math.random() * WORLD_HEIGHT), DEFAULT_SIZE);
-                                    myBalls.add(ball1);
-                                    balls.add(ball1);
-                                })
-                                .setNegativeButton("重新开始", (dlg, which) -> {
-                                    ((Activity) getContext()).recreate();
-                                })
-                                .show();
                     }
                 } else {
                     addSugar();

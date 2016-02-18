@@ -12,7 +12,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         GameView game = (GameView) findViewById(R.id.game);
+
         View split = findViewById(R.id.split);
         split.setOnClickListener((v) -> game.split());
+
+        View feed = findViewById(R.id.feed);
+        feed.setOnClickListener((v) -> game.feed());
     }
 }

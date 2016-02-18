@@ -18,7 +18,15 @@
         android:layout_margin="10dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:src="@drawable/ic_split" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/feed"
+        android:layout_marginBottom="10dp"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/split"
+        android:src="@drawable/ic_feed" />
 
 </RelativeLayout>

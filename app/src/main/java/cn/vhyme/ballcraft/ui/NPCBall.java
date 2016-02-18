@@ -10,20 +10,15 @@ import cn.vhyme.ballcraft.GameView;
 
 public class NPCBall extends PlayerBall {
 
-    private List<Ball> balls;
 
     public static final int WALL_FORCE = 60;
 
     // 迟钝系数
     private float delayFactor;
 
-    public NPCBall(Context context, float x, float y, float radius) {
-        super(context, x, y, radius);
+    public NPCBall(Context context, GameView view, float x, float y, float radius) {
+        super(context, view, x, y, radius);
         delayFactor = (float) Math.random() / 2;
-    }
-
-    public void updateBallList(Vector<Ball> balls) {
-        this.balls = new Vector<>(balls);
     }
 
     @Override
