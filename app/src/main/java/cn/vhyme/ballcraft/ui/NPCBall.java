@@ -23,7 +23,7 @@ public class NPCBall extends PlayerBall {
 
     @Override
     public void move(int worldW, int worldH) {
-        if (balls.size() > 0) {
+        if (balls.size() > 0 && !eaten) {
 
             // 对NPC的运动算法进行重构
             // 使用模拟力学的方案

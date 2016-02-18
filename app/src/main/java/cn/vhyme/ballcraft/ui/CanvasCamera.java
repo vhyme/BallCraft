@@ -6,6 +6,8 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
+import cn.vhyme.ballcraft.GameView;
+
 public class CanvasCamera {
 
     private int fullWidth, fullHeight, canvasWidth, canvasHeight;
@@ -82,14 +84,14 @@ public class CanvasCamera {
         int topMax = Math.max(-cameraY, 0);
         int rightMax = Math.min((int) (fullWidth * scaleFactor) - cameraX, canvasWidth);
         int bottomMax = Math.min((int) (fullHeight * scaleFactor) - cameraY, canvasHeight);
-        for (int i = leftMax; i < rightMax; i++) {
-            if ((i + cameraX) % (int) (interval * scaleFactor) == 0) {
-                canvas.drawLine(i, topMax, i, bottomMax, paint);
+        for (float pos = 0; pos < GameView.WORLD_WIDTH * scaleFactor; pos += interval * scaleFactor) {
+            if (cameraX < pos && pos < cameraX + canvasWidth) {
+                canvas.drawLine(pos - cameraX, topMax, pos - cameraX, bottomMax, paint);
             }
         }
-        for (int i = topMax; i < bottomMax; i++) {
-            if ((i + cameraY) % (int) (interval * scaleFactor) == 0) {
-                canvas.drawLine(leftMax, i, rightMax, i, paint);
+        for (float pos = 0; pos < GameView.WORLD_HEIGHT * scaleFactor; pos += interval * scaleFactor) {
+            if (cameraY < pos && pos < cameraY + canvasHeight) {
+                canvas.drawLine(leftMax, pos - cameraY, rightMax, pos - cameraY, paint);
             }
         }
         return this;

@@ -10,8 +10,11 @@ public class MotionBall extends Ball {
 
     public boolean scaled = false, moved = true;
 
+    public int playerToken;
+
     public MotionBall(Context context, float x, float y, float radius) {
         super(context, x, y, GameView.SUGAR_SIZE);
+        playerToken = hashCode();
         scaledRadius = radius;
     }
 
@@ -36,19 +39,19 @@ public class MotionBall extends Ball {
 
         // 新球产生或大小变化的动画
         if (!scaled) {
-            if (scaledRadius > radius) {
+            if (scaledRadius > radius) {// 放大
                 if (radius >= scaledRadius - GameView.BASE_SPEED_FACTOR) {
                     radius = scaledRadius;
                     scaled = true;
                 } else {
                     radius += GameView.BASE_SPEED_FACTOR;
                 }
-            } else {
+            } else {// 缩小
                 if (radius <= scaledRadius + GameView.BASE_SPEED_FACTOR) {
                     radius = scaledRadius;
                     scaled = true;
                 } else {
-                    radius -= GameView.BASE_SPEED_FACTOR;
+                    radius -= GameView.BASE_SPEED_FACTOR / 2;
                 }
             }
         }
