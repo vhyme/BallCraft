@@ -18,6 +18,10 @@ public class MotionBall extends Ball {
         scaledRadius = radius;
     }
 
+    public float getRealRadius(){
+        return scaled ? radius : scaledRadius;
+    }
+
     public void scaleTo(float radius) {
         scaled = false;
         scaledRadius = radius;

@@ -38,9 +38,11 @@ public class PlayerBall extends MotionBall {
     // 返回值 是否吃掉了一个NPC
     public boolean eat(Ball ball) {
 
-        if (!scaled || ball.eaten) return false;
+        if (ball.eaten) return false;
 
-        float d = radius - ball.radius * .2f;
+        float realRadius = getRealRadius();
+
+        float d = realRadius - ball.radius * .2f;
 
         if (Math.abs(x - ball.x) > d || Math.abs(y - ball.y) > d) return false;
 
@@ -53,26 +55,27 @@ public class PlayerBall extends MotionBall {
         if (ball != this
                 && ball instanceof PlayerBall && ((PlayerBall) ball).playerToken == playerToken) { // 都是自己的球
 
-            if ((this.radius > ball.radius
-                    || this.radius == ball.radius && this.hashCode() < ball.hashCode()) // 强调合并的主宾关系防止主宾混淆
+            if ((realRadius > ball.radius
+                    || realRadius == ball.radius && this.hashCode() < ball.hashCode()) // 强调合并的主宾关系防止主宾混淆
                     && moved // 发射分身或吐球的过程中防止合并
                     ) {
                 // 合并
-                scaleTo((float) Math.sqrt(radius * radius + ball.radius * ball.radius));
+                scaleTo((float) Math.sqrt(realRadius * realRadius + ball.radius * ball.radius));
                 ball.eaten = true;
+                ((PlayerBall) ball).scaleTo(0);
             }
 
         } else if (ball != this
-                && radius / ball.radius > 1 / (1 + GameView.IGNORED_DIFF_RATIO)
-                && radius / ball.radius < (1 + GameView.IGNORED_DIFF_RATIO)) {
+                && realRadius / ball.radius > 1 / (1 + GameView.IGNORED_DIFF_RATIO)
+                && realRadius / ball.radius < (1 + GameView.IGNORED_DIFF_RATIO)) {
             return false;
         } else if (ball instanceof VirusBall) {
-            scaleTo((float) Math.sqrt(radius * radius + ball.radius * ball.radius));
+            scaleTo((float) Math.sqrt(realRadius * realRadius + ball.radius * ball.radius));
             ball.eaten = true;
             // TODO 爆炸
-        } else if (ball != this && radius > ball.radius) {
+        } else if (ball != this && realRadius > ball.radius) {
             // 对方被吃掉了
-            scaleTo((float) Math.sqrt(radius * radius + ball.radius * ball.radius));
+            scaleTo((float) Math.sqrt(realRadius * realRadius + ball.radius * ball.radius));
             ball.eaten = true;
             return ball instanceof NPCBall;
         }

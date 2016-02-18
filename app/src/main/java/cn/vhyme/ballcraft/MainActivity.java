@@ -1,5 +1,6 @@
 package cn.vhyme.ballcraft;
 
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -16,7 +17,6 @@ public class MainActivity extends AppCompatActivity {
         View split = findViewById(R.id.split);
         split.setOnClickListener((v) -> game.split());
 
-        View feed = findViewById(R.id.feed);
-        feed.setOnClickListener((v) -> game.feed());
+        game.feedButton = (FloatingActionButton) findViewById(R.id.feed);
     }
 }

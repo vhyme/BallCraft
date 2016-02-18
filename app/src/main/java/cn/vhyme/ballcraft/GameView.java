@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.preference.PreferenceManager;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -23,6 +24,7 @@ import cn.vhyme.ballcraft.ui.FeedBall;
 import cn.vhyme.ballcraft.ui.MotionBall;
 import cn.vhyme.ballcraft.ui.NPCBall;
 import cn.vhyme.ballcraft.ui.PlayerBall;
+import cn.vhyme.ballcraft.ui.SugarBall;
 import cn.vhyme.ballcraft.ui.VirusBall;
 
 public class GameView extends View {
@@ -38,12 +40,12 @@ public class GameView extends View {
     private float density;
 
     public static final int WORLD_WIDTH = 1000, WORLD_HEIGHT = 1000,
-            GAME_MINUTES = 5, REFRESH_INTERVAL = 20,
+            GAME_MINUTES = 5, REFRESH_INTERVAL = 15, FEED_INTERVAL = 120,
             DEFAULT_SIZE = 10, SUGAR_SIZE = 3, FEED_SIZE = 6, VIRUS_SIZE = 20, FEED_DISTANCE = 50,
-            SUGAR_COUNT = 120, NPC_COUNT = 20, VIRUS_COUNT = 20,
+            SUGAR_COUNT = 100, NPC_COUNT = 20, VIRUS_COUNT = 20,
             MAX_SPLITS = 16, MERGE_DELAY_SECONDS = 10;
 
-    public static final float BASE_SPEED_FACTOR = 1.3f, MOTION_SPEED_FACTOR = 3f,
+    public static final float BASE_SPEED_FACTOR = 1.1f, MOTION_SPEED_FACTOR = 5f,
             IGNORED_DIFF_RATIO = .05f;
 
     private Paint textPaint;
@@ -99,7 +101,7 @@ public class GameView extends View {
     }
 
     public void addSugar() {
-        balls.add(new Ball(getContext(),
+        balls.add(new SugarBall(getContext(),
                 (int) (Math.random() * WORLD_WIDTH),
                 (int) (Math.random() * WORLD_HEIGHT), SUGAR_SIZE));
     }
@@ -135,7 +137,7 @@ public class GameView extends View {
     private int getPlayerMass() {
         int mass = 0;
         for (PlayerBall ball : myBalls) {
-            float radius = ball.scaled ? ball.radius : ball.scaledRadius;
+            float radius = ball.getRealRadius();
             mass += radius * radius * Math.PI;
         }
         return mass;
@@ -147,7 +149,7 @@ public class GameView extends View {
         for (PlayerBall oldBall : myBalls) {
             if (myBalls.size() < MAX_SPLITS
                     && oldBall.radius >= DEFAULT_SIZE * (float) Math.sqrt(2)) {
-                float oldRadius = oldBall.scaled ? oldBall.radius : oldBall.scaledRadius;
+                float oldRadius = oldBall.getRealRadius();
                 float newRadius = oldRadius / (float) Math.sqrt(2);
                 oldBall.scaleTo(newRadius);
                 float dx = oldBall.speedX;
@@ -156,7 +158,7 @@ public class GameView extends View {
                 if (module > 0) {
                     dx /= module;
                     dy /= module;
-                    module = newRadius * 3;
+                    module = newRadius * 4;
                     dx *= module;
                     dy *= module;
                 }
@@ -183,8 +185,9 @@ public class GameView extends View {
     public void feed() {
         float minSizeSq = DEFAULT_SIZE * DEFAULT_SIZE + FEED_SIZE * FEED_SIZE;
         for (PlayerBall ball : myBalls) {
-            if (ball.radius * ball.radius >= minSizeSq) {
-                ball.scaleTo((float) Math.sqrt(ball.radius * ball.radius - FEED_SIZE * FEED_SIZE));
+            float radius = ball.getRealRadius();
+            if (radius * radius >= minSizeSq) {
+                ball.scaleTo((float) Math.sqrt(radius * radius - FEED_SIZE * FEED_SIZE));
                 FeedBall ball1 = new FeedBall(getContext(), ball.x, ball.y, FEED_SIZE);
                 ball1.color = ball.color;
                 ball1.playerToken = ball.playerToken;
@@ -204,6 +207,7 @@ public class GameView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+
         if (myBalls.size() > 0) zoom = getZoomFactorAndFocus();
         camera.initialize(canvas, zoom[1], zoom[2], zoom[0])
                 .outerBg(Color.BLACK)
@@ -252,9 +256,17 @@ public class GameView extends View {
         }).start();
     }
 
+    public FloatingActionButton feedButton = null;
+
+    private int time = 0;
+
     private LambdaHandler refreshCanvas = new LambdaHandler(() -> {
+
         Collections.sort(balls, (ball1, ball2) -> new Float(ball1.radius).compareTo(ball2.radius));
         invalidate();
+
+        time++;
+        if (time % (FEED_INTERVAL / REFRESH_INTERVAL) == 0 && feedButton.isPressed()) feed();
 
         // 时间到
         if (surviveTime >= GAME_MINUTES * 60 * 1000) {

@@ -18,7 +18,7 @@ public class NPCBall extends PlayerBall {
 
     public NPCBall(Context context, GameView view, float x, float y, float radius) {
         super(context, view, x, y, radius);
-        delayFactor = (float) Math.random() / 2;
+        delayFactor = (float) Math.random() / 5;
     }
 
     @Override
@@ -29,6 +29,11 @@ public class NPCBall extends PlayerBall {
             // 使用模拟力学的方案
             float vx = 0, vy = 0, totalModule = 0;
             for (Ball ball : balls) {
+
+                if (ball instanceof SugarBall){
+                    continue;
+                }
+
                 // 发现大小相同的球，对不同的球随机选择“不做处理”或“当作敌人”
                 if (radius / ball.radius > 1 / (1 + GameView.IGNORED_DIFF_RATIO)
                         && radius / ball.radius < (1 + GameView.IGNORED_DIFF_RATIO)) {
