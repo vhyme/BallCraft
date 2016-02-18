@@ -161,7 +161,7 @@ public class GameView extends View {
                     dy *= module;
                 }
                 PlayerBall newBall = new PlayerBall(getContext(), this, oldBall.x, oldBall.y, oldRadius);
-                newBall.stopScale();
+                newBall.stopScale(); // 取消新球出现的动画，用大球变小的动画代替
                 newBall.scaleTo(newRadius);
                 newBall.moveBy(dx, dy);
 
